@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  # Simulação do serviço AWS Lambda
+  lambda:
+    image: lambci/lambda:nodejs14.x
+    command: [ "server.handler" ]
+    volumes:
+      - ./app:/var/task
+    ports:
+      - "9000:8080"
+
+  # Simulação do serviço Amazon S3
+  s3:
+    image: scality/s3server
+    ports:
+      - "4572:8000"
+    environment:
+      - PORT=8000
+      - DATA_DIR=/usr/src/app/local-s3-data
+
+  # Simulação do serviço Amazon CloudFront (Nginx)
+  cloudfront:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+
+  # Seu aplicativo Next.js
+  nextjs:
+    build:
+      context: ./path/to/your/nextjs/app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_AWS_LAMBDA_ENDPOINT=http://lambda:8080
+      - NEXT_PUBLIC_AWS_S3_ENDPOINT=http://s3:8000
